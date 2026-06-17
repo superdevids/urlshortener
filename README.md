@@ -1,36 +1,118 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# URL Shortener
 
-## Getting Started
+A professional-grade URL Shortener application built with Next.js (App Router), TypeScript, and Tailwind CSS. This application supports both local JSON file storage and MySQL database storage, configurable via environment variables.
 
-First, run the development server:
+## Features
+
+- **URL Shortening**: Create short URLs with custom aliases and optional expiration.
+- **Redirection**: Redirects short URLs to their original long URLs, tracking click counts.
+- **Dashboard**: Manage all created short URLs, view statistics, and delete links.
+- **Analytics**: View click counts and last clicked timestamps for each short URL.
+- **Configurable Storage**: Choose between JSON file storage (local, default) or MySQL database.
+- **Security**: Input validation, URL sanitization, rate limiting, and protection against SQL injection.
+
+## Tech Stack
+
+- Next.js 14+ (App Router)
+- TypeScript (strict mode)
+- Tailwind CSS
+- Zod for schema validation
+- dotenv for configuration
+- `mysql2` for MySQL interaction (or Prisma)
+- `proper-lockfile` for JSON file concurrency safety
+
+## Project Structure
+
+The project follows a structured layout:
+
+- `/app`: Contains Next.js App Router routes and pages.
+  - `/api`: API routes for backend logic.
+    - `/links`: For managing links (list, delete).
+    - `/[id]`: For specific link operations.
+    - `/[id]/stats`: For retrieving link statistics.
+    - `/shorten`: Endpoint for creating new short links.
+  - `/[shortCode]`: Dynamic route for redirecting short links.
+  - `404.tsx`: Custom 404 error page.
+- `/lib`: Core application logic.
+  - `/storage`: Storage adapter implementations (JSON, MySQL).
+    - `index.ts`: Repository factory.
+    - `types.ts`: Repository interface and types.
+    - `json-repository.ts`: JSON file storage implementation.
+    - `mysql-repository.ts`: MySQL database storage implementation.
+  - `validators.ts`: Zod schemas for input validation.
+  - `rate-limit.ts`: Rate limiting implementation.
+  - `short-code.ts`: Short code generation logic.
+- `/types`: Shared TypeScript types.
+- `/public`: Static assets.
+- `/tests`: Unit tests.
+- `/data`: Directory for storing the JSON database file (created automatically).
+- `/migrations`: SQL migration scripts for MySQL.
+
+## Environment Variables
+
+Create a `.env.local` file in the root of the project based on the `.env.local.example` provided. Key variables include:
+
+- `STORAGE_DRIVER`: `'json'` or `'mysql'` (defaults to `'json'`).
+- `JSON_DB_PATH`: Path to the JSON database file (used when `STORAGE_DRIVER` is `'json'`).
+- MySQL configuration variables (`MYSQL_HOST`, `MYSQL_PORT`, etc.) for when `STORAGE_DRIVER` is `'mysql'`.
+- `NEXT_PUBLIC_BASE_URL`: The base URL for generated short links.
+- `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW_MS`: For API rate limiting.
+
+## Setup and Running
+
+### 1. Install Dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. JSON File Storage (Default)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1.  Ensure `STORAGE_DRIVER=json` in your `.env.local` file.
+2.  Run the development server:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+    ```bash
+    npm run dev
+    ```
+3.  The application will automatically create the `./data/links.json` file if it doesn't exist.
 
-## Learn More
+### 3. MySQL Storage
 
-To learn more about Next.js, take a look at the following resources:
+1.  Ensure `STORAGE_DRIVER=mysql` in your `.env.local` file.
+2.  Configure your MySQL connection details in `.env.local`.
+3.  **Migrate the database**:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+    ```bash
+    npm run db:migrate
+    ```
+    *(This command assumes you have a script in `package.json` to run the SQL migration)*
+4.  Run the development server:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+    ```bash
+    npm run dev
+    ```
 
-## Deploy on Vercel
+## Storage Driver Comparison
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### JSON File Storage
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*   **Pros**: Simple setup, no external database required, good for local development and small-scale deployments.
+*   **Cons**:
+    *   **Concurrency Issues**: Can lead to race conditions if not properly managed with file locking, especially under heavy load. The implementation uses `proper-lockfile` to mitigate this.
+    *   **Scalability**: Not suitable for high-traffic or high-concurrency production environments.
+    *   **Serverless Deployment**: **Not recommended for serverless platforms like Vercel** due to the ephemeral nature of the filesystem. Data can be lost on deploy or scale-up events.
+
+### MySQL Storage
+
+*   **Pros**: Robust, scalable, reliable for production environments, handles concurrency well with proper connection pooling. Recommended for serverless deployments.
+*   **Cons**: Requires a separate database instance, slightly more complex setup.
+
+### Recommendation
+
+-   **Development & Small Scale**: JSON file storage is convenient.
+-   **Production & Serverless (Vercel)**: MySQL storage is strongly recommended for reliability and scalability.
+
+## Additional Notes
+
+-   The `NEXT_PUBLIC_BASE_URL` environment variable must be set correctly for short links to function properly.
+-   Rate limiting is implemented in-memory; for multi-instance deployments, consider a centralized solution like Redis.

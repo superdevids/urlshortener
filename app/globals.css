@@ -1,26 +1,64 @@
-@import "tailwindcss";
+/* @fileoverview Global styles and Tailwind CSS base configuration. */
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+/* Import Tailwind directives and base styles */
+@tailwind base;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  /* Custom base styles can go here */
+  /* For example, setting default font smoothing */
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-smoothing: antialiased;
   }
+
+  body {
+    /* Example: Add custom background and text color based on light/dark mode */
+    /* These are often overridden by Next.js layout's dark mode classes */
+    /* background-color: #f3f4f6; /* Default light mode */
+    /* color: #1f2937; /* Default dark text */
+  }
+
+  /* You can add custom CSS variables here if needed */
+  /* :root {
+    --my-custom-color: #ff0000;
+  } */
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@tailwind components;
+
+@layer components {
+  /* Custom component styles can go here */
+  /* Example: A custom button style */
+  /* .btn-primary {
+    @apply px-4 py-2 rounded-md bg-blue-500 text-white hover:bg-blue-600 font-medium;
+  } */
+}
+
+@tailwind utilities;
+
+/*
+  Any other global CSS rules can be added here.
+  For example, customizing scrollbars or adding specific element styles.
+*/
+
+/* Basic Scrollbar Styling (Optional) */
+/* ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f1f1; /* dark: #2d3748 */
+/* } */
+
+::-webkit-scrollbar-thumb {
+  background: #888;
+  /* dark: #4a5568 */
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+  /* dark: #6b7280 */
 }
