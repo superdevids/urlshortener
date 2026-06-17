@@ -14,7 +14,6 @@ import { isNodeError } from '@/types/errors';
 
 // Default path if not specified in environment variables
 const DB_FILE_PATH = process.env.JSON_DB_PATH || './data/links.json';
-const LOCK_PATH = `${DB_FILE_PATH}.lock`; // Lock file path
 
 /**
  * Loads links from the JSON database file.
@@ -57,81 +56,84 @@ async function saveLinks(links: Link[]): Promise<void> {
 }
 
 export class JsonFileRepository implements LinkRepository {
-  private releaseLock: (() => void) | null = null;
+  private releaseLock: (() => Promise<void>) | null = null;
 
-  /** Acquires a file lock to ensure exclusive access to the JSON file. */
-  private async acquireLock() {
-    // Use proper-lockfile for robust locking
-    this.releaseLock = await lockfile.lock(LOCK_PATH, { retries: 5, minTimeout: 100, maxTimeout: 500 });
+  /** 
+   * Acquires a file lock to ensure exclusive access to the JSON file.
+   * Only locks for write operations to improve read performance.
+   */
+  private async acquireLock(): Promise<void> {
+    // Ensure file exists before attempting to lock
+    await loadLinks();
+    
+    // Use proper-lockfile v4.x API - lock the actual file, not a separate .lock file
+    this.releaseLock = await lockfile.lock(DB_FILE_PATH, {
+      retries: {
+        retries: 5,
+        minTimeout: 100,
+        maxTimeout: 500,
+      },
+      stale: 10000, // Lock expires after 10s if not released
+      realpath: false,
+    });
   }
 
   /** Releases the file lock. */
-  private release() {
+  private async release(): Promise<void> {
     if (this.releaseLock) {
-      this.releaseLock();
+      await this.releaseLock();
       this.releaseLock = null;
     }
   }
 
   /** @inheritdoc */
   async findAll(): Promise<Link[]> {
-    await this.acquireLock();
-    try {
-      const links = await loadLinks();
-      // Ensure dates are properly formatted as ISO strings
-      return links.map(link => ({
-        ...link,
-        createdAt: new Date(link.createdAt).toISOString(),
-        expiresAt: link.expiresAt ? new Date(link.expiresAt).toISOString() : null,
-        lastClickedAt: link.lastClickedAt ? new Date(link.lastClickedAt).toISOString() : null,
-      }));
-    } finally {
-      this.release();
-    }
+    // Read operations don't need locking (atomic file reads in Node.js)
+    const links = await loadLinks();
+    // Ensure dates are properly formatted as ISO strings
+    return links.map(link => ({
+      ...link,
+      createdAt: new Date(link.createdAt).toISOString(),
+      expiresAt: link.expiresAt ? new Date(link.expiresAt).toISOString() : null,
+      lastClickedAt: link.lastClickedAt ? new Date(link.lastClickedAt).toISOString() : null,
+    }));
   }
 
   /** @inheritdoc */
   async findByShortCode(code: string): Promise<Link | null> {
-    await this.acquireLock();
-    try {
-      const links = await loadLinks();
-      const link = links.find(l => l.shortCode === code);
-      if (!link) return null;
+    // Read operations don't need locking
+    const links = await loadLinks();
+    const link = links.find(l => l.shortCode === code);
+    if (!link) return null;
 
-      // Ensure dates are properly formatted as ISO strings
-      return {
-        ...link,
-        createdAt: new Date(link.createdAt).toISOString(),
-        expiresAt: link.expiresAt ? new Date(link.expiresAt).toISOString() : null,
-        lastClickedAt: link.lastClickedAt ? new Date(link.lastClickedAt).toISOString() : null,
-      };
-    } finally {
-      this.release();
-    }
+    // Ensure dates are properly formatted as ISO strings
+    return {
+      ...link,
+      createdAt: new Date(link.createdAt).toISOString(),
+      expiresAt: link.expiresAt ? new Date(link.expiresAt).toISOString() : null,
+      lastClickedAt: link.lastClickedAt ? new Date(link.lastClickedAt).toISOString() : null,
+    };
   }
 
   /** @inheritdoc */
   async findById(id: string): Promise<Link | null> {
-    await this.acquireLock();
-    try {
-      const links = await loadLinks();
-      const link = links.find(l => l.id === id);
-      if (!link) return null;
+    // Read operations don't need locking
+    const links = await loadLinks();
+    const link = links.find(l => l.id === id);
+    if (!link) return null;
 
-      // Ensure dates are properly formatted as ISO strings
-      return {
-        ...link,
-        createdAt: new Date(link.createdAt).toISOString(),
-        expiresAt: link.expiresAt ? new Date(link.expiresAt).toISOString() : null,
-        lastClickedAt: link.lastClickedAt ? new Date(link.lastClickedAt).toISOString() : null,
-      };
-    } finally {
-      this.release();
-    }
+    // Ensure dates are properly formatted as ISO strings
+    return {
+      ...link,
+      createdAt: new Date(link.createdAt).toISOString(),
+      expiresAt: link.expiresAt ? new Date(link.expiresAt).toISOString() : null,
+      lastClickedAt: link.lastClickedAt ? new Date(link.lastClickedAt).toISOString() : null,
+    };
   }
 
   /** @inheritdoc */
   async create(data: CreateLinkInput): Promise<Link> {
+    // Lock for write operations
     await this.acquireLock();
     try {
       const links = await loadLinks();
@@ -215,13 +217,9 @@ export class JsonFileRepository implements LinkRepository {
 
   /** @inheritdoc */
   async existsByShortCode(code: string): Promise<boolean> {
-    await this.acquireLock();
-    try {
-      const links = await loadLinks();
-      // Check if any link has the specified shortCode
-      return links.some(l => l.shortCode === code);
-    } finally {
-      this.release();
-    }
+    // Read operations don't need locking (atomic file reads in Node.js)
+    const links = await loadLinks();
+    // Check if any link has the specified shortCode
+    return links.some(l => l.shortCode === code);
   }
 }

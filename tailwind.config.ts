@@ -12,7 +12,7 @@ module.exports = {
 		"./src/**/*.{js,ts,jsx,tsx,mdx}", // Scan files in src directory (if used)
 		// Add any other directories where you use Tailwind classes
 	],
-	// darkMode: 'class', // Enable dark mode based on 'dark' class on <html> element
+	darkMode: 'class', // Enable dark mode based on 'dark' class on <html> element
 	theme: {
 		extend: {
 			// Extend Tailwind's default theme

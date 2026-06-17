@@ -6,8 +6,11 @@
 import { NextResponse } from 'next/server';
 import { getRepository } from '@/lib/storage';
 
-export async function GET(req: Request, { params }: { params: { id: string } }) {
-  const { id } = params; // 'id' here refers to the link's unique identifier (UUID)
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params; // 'id' here refers to the link's unique identifier (UUID)
 
   if (!id) {
     return NextResponse.json({ error: { code: 'BAD_REQUEST', message: 'Link ID is required.' } }, { status: 400 });

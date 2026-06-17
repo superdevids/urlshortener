@@ -4,11 +4,15 @@
  */
 
 import { NextResponse } from 'next/server';
+import { notFound, redirect } from 'next/navigation';
 import { getRepository } from '@/lib/storage';
 
 // Using Request and NextResponse for App Router
-export async function GET(req: Request, { params }: { params: { shortCode: string } }) {
-  const { shortCode } = params;
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ shortCode: string }> }
+) {
+  const { shortCode } = await params;
 
   // Basic validation for shortCode
   if (!shortCode) {
@@ -26,20 +30,14 @@ export async function GET(req: Request, { params }: { params: { shortCode: strin
 
     // Handle case where the link is not found
     if (!link) {
-      // Ideally, return a custom 404 page. For API route, return JSON error.
-      return new NextResponse(JSON.stringify({ error: { code: 'NOT_FOUND', message: 'The short link was not found.' } }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      // Use Next.js notFound() to render the custom not-found.tsx page
+      notFound();
     }
 
     // Check if the link has expired
     if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
-       // Return a 410 Gone status for expired links
-       return new NextResponse(JSON.stringify({ error: { code: 'GONE', message: 'This short link has expired.' } }), {
-        status: 410, 
-        headers: { 'Content-Type': 'application/json' },
-      });
+       // Redirect to the custom expired page with query parameters
+       redirect(`/expired?code=${shortCode}&expiredAt=${link.expiresAt}`);
     }
 
     // Increment the click count and update the last clicked timestamp

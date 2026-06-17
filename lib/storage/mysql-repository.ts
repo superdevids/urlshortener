@@ -5,7 +5,7 @@
 
 import { Link, CreateLinkInput } from '@/types';
 import { LinkRepository } from './types';
-import mysql from 'mysql2/promise';
+import mysql, { RowDataPacket } from 'mysql2/promise';
 import crypto from 'crypto';
 import { generateUniqueShortCode } from '@/lib/short-code';
 
@@ -59,15 +59,15 @@ export class MySqlRepository implements LinkRepository {
       FROM links 
       ORDER BY createdAt DESC
     `;
-    const [rows] = await getPool().execute<mysql.Row[]>(query);
+    const [rows] = await getPool().execute<RowDataPacket[]>(query);
     // Map rows to Link objects, ensuring correct date formatting
-    return rows.map((row: mysql.Row) => this.mapRowToLink(row));
+    return rows.map((row: RowDataPacket) => this.mapRowToLink(row));
   }
 
   /** @inheritdoc */
   async findByShortCode(code: string): Promise<Link | null> {
     const query = 'SELECT * FROM links WHERE shortCode = ?';
-    const [rows] = await getPool().execute<mysql.Row[]>(query, [code]);
+    const [rows] = await getPool().execute<RowDataPacket[]>(query, [code]);
     if (rows.length === 0) return null;
     return this.mapRowToLink(rows[0]);
   }
@@ -75,7 +75,7 @@ export class MySqlRepository implements LinkRepository {
   /** @inheritdoc */
   async findById(id: string): Promise<Link | null> {
     const query = 'SELECT * FROM links WHERE id = ?';
-    const [rows] = await getPool().execute<mysql.Row[]>(query, [id]);
+    const [rows] = await getPool().execute<RowDataPacket[]>(query, [id]);
     if (rows.length === 0) return null;
     return this.mapRowToLink(rows[0]);
   }
@@ -126,7 +126,7 @@ export class MySqlRepository implements LinkRepository {
   async incrementClick(shortCode: string): Promise<void> {
     // First, check if the link exists and is not expired
     const checkQuery = 'SELECT id, expiresAt FROM links WHERE shortCode = ?';
-    const [linkRows] = await getPool().execute<mysql.Row[]>(checkQuery, [shortCode]);
+    const [linkRows] = await getPool().execute<RowDataPacket[]>(checkQuery, [shortCode]);
 
     if (linkRows.length === 0) {
       console.warn(`Link not found for click increment: ${shortCode}`);
@@ -154,17 +154,17 @@ export class MySqlRepository implements LinkRepository {
   /** @inheritdoc */
   async existsByShortCode(code: string): Promise<boolean> {
     const query = 'SELECT COUNT(*) as count FROM links WHERE shortCode = ?';
-    const [rows] = await getPool().execute<mysql.Row[]>(query, [code]);
+    const [rows] = await getPool().execute<RowDataPacket[]>(query, [code]);
     // Rows should contain { count: number }
     return rows[0]?.count > 0;
   }
 
   /**
    * Helper method to map MySQL row to Link object, ensuring correct Date formatting.
-   * @param {mysql.Row} row - The raw row data from the database.
+   * @param {RowDataPacket} row - The raw row data from the database.
    * @returns {Link} The mapped Link object.
    */
-  private mapRowToLink(row: mysql.Row): Link {
+  private mapRowToLink(row: RowDataPacket): Link {
     return {
       id: row.id as string,
       shortCode: row.shortCode as string,

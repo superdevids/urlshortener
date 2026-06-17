@@ -20,6 +20,25 @@
     /* color: #1f2937; /* Default dark text */
   }
 
+  /* Smooth theme transition for all elements */
+  * {
+    transition-property: background-color, border-color, color, fill, stroke;
+    transition-duration: 300ms;
+    transition-timing-function: ease-in-out;
+  }
+
+  /* Exclude elements that shouldn't animate */
+  *:where(:not(input):not(textarea):not(select):not([role="progressbar"])) {
+    /* Applied to all except form inputs and progress indicators */
+  }
+
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition-duration: 0ms !important;
+    }
+  }
+
   /* You can add custom CSS variables here if needed */
   /* :root {
     --my-custom-color: #ff0000;

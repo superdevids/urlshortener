@@ -45,7 +45,7 @@ export default function HomePage() {
 			const data: LinkType[] = await response.json();
 			setLinks(data);
 		} catch (error: unknown) {
-			if (process.env.NODE_ENV === 'development') {
+			if (process.env.NODE_ENV === "development") {
 				console.error("Failed to fetch links:", error);
 			}
 			setApiError(`Could not load your links. ${getErrorMessage(error)}`);
@@ -83,52 +83,52 @@ export default function HomePage() {
 				body: JSON.stringify({ originalUrl, customAlias: customAlias || undefined, expiresInDays: expiresInDaysNum }),
 			});
 
-		const data = await response.json();
+			const data = await response.json();
 
-		if (!response.ok) {
-			if (response.status === 409) setApiError("Custom alias is already in use. Please choose another.");
-			else if (response.status === 400) {
-				// Handle Zod validation errors - message can be string or object
-				let errorList: string;
-				if (data.error?.message && typeof data.error.message === 'object') {
-					errorList = Object.entries(data.error.message as Record<string, unknown>)
-						.map(([field, messages]) => {
-							const msgArray = Array.isArray(messages) ? messages : [String(messages)];
-							return `${field}: ${msgArray.join(", ")}`;
-						})
-						.join("; ");
-				} else {
-					errorList = data.error?.message || "Please check your input.";
-				}
-				setApiError(`Invalid input: ${errorList}`);
-			} else if (response.status === 429) setApiError("Rate limit exceeded. Please try again later.");
-			else setApiError(data.error?.message || `Error creating short URL: ${response.statusText}`);
+			if (!response.ok) {
+				if (response.status === 409) setApiError("Custom alias is already in use. Please choose another.");
+				else if (response.status === 400) {
+					// Handle Zod validation errors - message can be string or object
+					let errorList: string;
+					if (data.error?.message && typeof data.error.message === "object") {
+						errorList = Object.entries(data.error.message as Record<string, unknown>)
+							.map(([field, messages]) => {
+								const msgArray = Array.isArray(messages) ? messages : [String(messages)];
+								return `${field}: ${msgArray.join(", ")}`;
+							})
+							.join("; ");
+					} else {
+						errorList = data.error?.message || "Please check your input.";
+					}
+					setApiError(`Invalid input: ${errorList}`);
+				} else if (response.status === 429) setApiError("Rate limit exceeded. Please try again later.");
+				else setApiError(data.error?.message || `Error creating short URL: ${response.statusText}`);
 
-			setIsLoading(false);
-			return;
-		}
-
-		// Success
-		setShortUrlData(data);
-		fetchLinks(); // Refresh link list
-
-		// Clear form fields
-		setOriginalUrl("");
-		setCustomAlias("");
-		setExpiresInDays("");
-	} catch (err: unknown) {
-		if (isZodError(err)) {
-			const errorMessages = err.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ");
-			setApiError(`Validation Error: ${errorMessages}`);
-		} else {
-			if (process.env.NODE_ENV === 'development') {
-				console.error("Frontend shortening error:", err);
+				setIsLoading(false);
+				return;
 			}
-			setApiError(`An unexpected error occurred. ${getErrorMessage(err)}`);
+
+			// Success
+			setShortUrlData(data);
+			fetchLinks(); // Refresh link list
+
+			// Clear form fields
+			setOriginalUrl("");
+			setCustomAlias("");
+			setExpiresInDays("");
+		} catch (err: unknown) {
+			if (isZodError(err)) {
+				const errorMessages = err.issues.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ");
+				setApiError(`Validation Error: ${errorMessages}`);
+			} else {
+				if (process.env.NODE_ENV === "development") {
+					console.error("Frontend shortening error:", err);
+				}
+				setApiError(`An unexpected error occurred. ${getErrorMessage(err)}`);
+			}
+		} finally {
+			setIsLoading(false);
 		}
-	} finally {
-		setIsLoading(false);
-	}
 	};
 
 	// --- Handler: Delete Link ---
@@ -145,16 +145,16 @@ export default function HomePage() {
 				throw new Error(`Failed to delete link. Server responded with ${response.status}`);
 			}
 
-		setLinks((prevLinks) => prevLinks.filter((link) => link.id !== id));
-		setApiError(null); // Clear apiError if delete succeeds
-	} catch (error: unknown) {
-		if (process.env.NODE_ENV === 'development') {
-			console.error("Error deleting link:", error);
+			setLinks((prevLinks) => prevLinks.filter((link) => link.id !== id));
+			setApiError(null); // Clear apiError if delete succeeds
+		} catch (error: unknown) {
+			if (process.env.NODE_ENV === "development") {
+				console.error("Error deleting link:", error);
+			}
+			setDeleteError(getErrorMessage(error) || "Could not delete the link.");
+		} finally {
+			setIsDeleting(null);
 		}
-		setDeleteError(getErrorMessage(error) || "Could not delete the link.");
-	} finally {
-		setIsDeleting(null);
-	}
 	};
 
 	// --- Utility: Copy to Clipboard ---
@@ -165,7 +165,7 @@ export default function HomePage() {
 				alert("Short URL copied to clipboard!");
 			})
 			.catch((err: unknown) => {
-				if (process.env.NODE_ENV === 'development') {
+				if (process.env.NODE_ENV === "development") {
 					console.error("Failed to copy URL: ", err);
 				}
 				alert("Failed to copy URL. Please copy it manually.");
@@ -195,7 +195,7 @@ export default function HomePage() {
 	// --- Render ---
 	return (
 		<div className="container mx-auto px-4 py-8">
-			<h1 className="text-4xl font-bold text-center my-8 text-gray-900 dark:text-white">URL Shortener Dashboard</h1>
+			<h1 className="text-4xl font-bold text-center my-8 text-gray-900 dark:text-white">URL Shortener Vibe Coding Dashboard</h1>
 
 			{/* Create URL Form Section */}
 			<div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 mb-10">
@@ -219,7 +219,7 @@ export default function HomePage() {
 							onChange={(e) => setOriginalUrl(e.target.value)}
 							required
 							placeholder="https://example.com/your/very/long/url/here"
-							className="mt-1 p-3 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+							className="mt-1 p-3 block w-full rounded-md bg-gray-200 border-gray-300 dark:border-gray-600 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
 						/>
 					</div>
 
@@ -231,15 +231,15 @@ export default function HomePage() {
 						>
 							Custom Alias (Optional)
 						</label>
-						<div className="flex items-center space-x-2">
-							<span className="text-sm text-gray-500 dark:text-gray-400 whitespace-nowrap hidden sm:inline">{process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/</span>
+						<div className="flex items-center space-x-0">
+							<span className="text-sm sm:p-3 bg-indigo-600 text-white font-semibold rounded-md whitespace-nowrap hidden sm:inline sm:mr-2">{process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000"}/</span>
 							<input
 								id="customAlias"
 								type="text"
 								value={customAlias}
 								onChange={(e) => setCustomAlias(e.target.value.trim())}
 								placeholder="my-alias (3-20 chars, alphanumeric, _, -)"
-								className="mt-1 p-3 flex-grow rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+								className="p-3 flex-grow rounded-md bg-gray-200 border-gray-300 dark:border-gray-600 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
 								maxLength={20}
 							/>
 						</div>
@@ -260,7 +260,7 @@ export default function HomePage() {
 							onChange={(e) => setExpiresInDays(e.target.value)}
 							min="1"
 							placeholder="e.g., 30"
-							className="mt-1 p-3 block w-full rounded-md border-gray-300 dark:border-gray-600 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
+							className="mt-1 p-3 block w-full rounded-md bg-gray-200 border-gray-300 dark:border-gray-600 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white"
 						/>
 					</div>
 
@@ -347,37 +347,37 @@ export default function HomePage() {
 								<tr>
 									<th
 										scope="col"
-										className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+										className="px-4 py-3 text-nowrap text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
 									>
 										Short URL
 									</th>
 									<th
 										scope="col"
-										className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+										className="px-4 py-3 text-nowrap text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
 									>
 										Original URL
 									</th>
 									<th
 										scope="col"
-										className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+										className="px-4 py-3 text-nowrap text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
 									>
 										Clicks
 									</th>
 									<th
 										scope="col"
-										className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+										className="px-4 py-3 text-nowrap text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
 									>
 										Expires
 									</th>
 									<th
 										scope="col"
-										className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+										className="px-4 py-3 text-nowrap text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
 									>
 										Status
 									</th>
 									<th
 										scope="col"
-										className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
+										className="px-4 py-3 text-nowrap text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"
 									>
 										Actions
 									</th>
@@ -390,7 +390,7 @@ export default function HomePage() {
 										className={`${link.isExpired ? "opacity-60 italic bg-gray-50 dark:bg-gray-750" : ""} hover:bg-gray-50 dark:hover:bg-gray-750 transition duration-200`}
 									>
 										{/* Short URL Cell */}
-										<td className="px-4 py-4 whitespace-nowrap text-sm font-mono">
+										<td className="p-4 text-nowrap whitespace-nowrap text-sm font-mono">
 											<Link
 												href={link.fullShortUrl}
 												target="_blank"
@@ -402,7 +402,7 @@ export default function HomePage() {
 											</Link>
 										</td>
 										{/* Original URL Cell */}
-										<td className="px-4 py-4 text-sm break-all text-gray-700 dark:text-gray-300">
+										<td className="p-4 text-nowrap text-sm break-all text-gray-700 dark:text-gray-300">
 											<Link
 												href={link.originalUrl}
 												target="_blank"
@@ -414,15 +414,15 @@ export default function HomePage() {
 											</Link>
 										</td>
 										{/* Clicks Cell */}
-										<td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{link.clickCount}</td>
+										<td className="p-4 text-nowrap whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{link.clickCount}</td>
 										{/* Expires Cell */}
-										<td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{link.expiresAtFmt}</td>
+										<td className="p-4 text-nowrap whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{link.expiresAtFmt}</td>
 										{/* Status Cell */}
-										<td className="px-4 py-4 whitespace-nowrap">
+										<td className="p-4 text-nowrap whitespace-nowrap">
 											<span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${link.isExpired ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300" : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"}`}>{link.isExpired ? "Expired" : "Active"}</span>
 										</td>
 										{/* Actions Cell */}
-										<td className="px-4 py-4 whitespace-nowrap text-sm">
+										<td className="p-4 text-nowrap whitespace-nowrap text-sm">
 											<div className="flex items-center space-x-3">
 												<button
 													onClick={() => handleCopy(link.fullShortUrl)}

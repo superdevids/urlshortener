@@ -30,8 +30,11 @@ export async function GET() {
 
 // --- Handler for DELETE /api/links/[id] ---
 // Deletes a specific link by its ID.
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
-  const { id } = params;
+export async function DELETE(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const { id } = await params;
 
   if (!id) {
     return NextResponse.json({ error: { code: 'BAD_REQUEST', message: 'Link ID is required.' } }, { status: 400 });
