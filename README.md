@@ -116,3 +116,6 @@ npm install
 
 -   The `NEXT_PUBLIC_BASE_URL` environment variable must be set correctly for short links to function properly.
 -   Rate limiting is implemented in-memory; for multi-instance deployments, consider a centralized solution like Redis.
+
+
+> Last updated: 2026-06-18 12:43:56
